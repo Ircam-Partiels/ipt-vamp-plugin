@@ -1,0 +1,169 @@
+name: CI
+
+on: [push, pull_request]
+
+env:
+  # Checks for the '[debug]' string in the commit message to compile as debug instead of release.
+  build_type: ${{ contains(github.event.head_commit.message, '[debug]') && 'Debug' || 'Release' }}
+  # Checks whether the event corresponds to a tag to activate the automatic creation of a release.
+  is_tagged: ${{ startsWith(github.ref, 'refs/tags/') }}
+  # The name of the version
+  tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || ''}}
+
+jobs:
+  # Checks source code formatting with clang before compiling.
+  Format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - name: Check
+      uses: jidicula/clang-format-action@v4.18.0
+      with:
+        clang-format-version: '22'
+        check-path: '.'
+  # Creates a cache for the model downloaded
+  Cache:
+    runs-on: ubuntu-latest
+    needs: Format
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        submodules: recursive
+    - name: Cache
+      uses: actions/cache@v6
+      with:
+        path: ./build/models
+        key: models-${{ hashFiles('resources/download_model.cmake') }}
+        enableCrossOsArchive: true
+    - name: Configure
+      run: cmake -DOUTPUT_DIR=${{ github.workspace }}/build -P resources/download_model.cmake
+  # Compiles and packages the plugin for Ubuntu.
+  Ubuntu:
+    runs-on: ubuntu-latest
+    needs: Cache
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        submodules: recursive
+    - name: Cache
+      uses: actions/cache@v6
+      with:
+        path: ./build/models
+        key: models-${{ hashFiles('resources/download_model.cmake') }}
+        enableCrossOsArchive: true
+    - name: Cache
+      uses: actions/cache@v6
+      with:
+        path: ./build/libtorch
+        key: ${{ runner.os }}-libtorch-${{ hashFiles('CMakeLists.txt') }}
+        enableCrossOsArchive: true
+    - uses: seanmiddleditch/gha-setup-ninja@master
+    - name: Configure
+      run: cmake -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DCMAKE_C_COMPILER="/usr/bin/clang" -DCMAKE_CXX_COMPILER="/usr/bin/clang++" -DIPT_VAMP_PLUGIN_BUILD_TAG=${{ env.tag_name }} -DIGNORE_PARTIELS_DEBUG=ON
+    - name: Build
+      run: cmake --build ${{ github.workspace }}/build
+    - name: Artifact
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: IPT-Linux
+        path: ${{ github.workspace }}/package/IPT-Linux.tar.gz
+    - name: Release
+      uses: softprops/action-gh-release@v3
+      if: ${{ env.is_tagged == 'true' }}
+      with:
+        draft: true
+        prerelease: true
+        fail_on_unmatched_files: true
+        generate_release_notes: true
+        files: ${{ github.workspace }}/package/IPT-Linux.tar.gz
+  # Compiles and packages the plugin for Windows.
+  Windows:
+    runs-on: windows-latest
+    needs: Cache
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        submodules: recursive
+    - name: Cache
+      uses: actions/cache@v6
+      with:
+        path: ./build/models
+        key: models-${{ hashFiles('resources/download_model.cmake') }}
+        enableCrossOsArchive: true
+    - name: Cache
+      uses: actions/cache@v6
+      with:
+        path: ./build/libtorch
+        key: ${{ runner.os }}-libtorch-${{ hashFiles('CMakeLists.txt') }}
+        enableCrossOsArchive: true
+    - name: Configure
+      run: cmake -B ${{ github.workspace }}/build -G "Visual Studio 18 2026" -A x64 -DIPT_VAMP_PLUGIN_BUILD_TAG="${{ env.tag_name }}" -DIGNORE_PARTIELS_DEBUG=ON
+    - name: Build
+      run: cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }}
+    - name: Artifact
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: IPT-Windows
+        path: ${{ github.workspace }}/package/IPT-Windows.exe
+    - name: Release
+      uses: softprops/action-gh-release@v3
+      if: ${{ env.is_tagged == 'true' }}
+      with:
+        draft: true
+        prerelease: true
+        fail_on_unmatched_files: true
+        files: ${{ github.workspace }}/package/IPT-Windows.exe
+  # Compiles and packages the plugin for MacOS.
+  MacOS:
+    runs-on: macos-latest
+    needs: Cache
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+      with:
+        submodules: recursive
+    - name: Cache
+      uses: actions/cache@v6
+      with:
+        path: ./build/models
+        key: models-${{ hashFiles('resources/download_model.cmake') }}
+        enableCrossOsArchive: true
+    - name: Cache
+      uses: actions/cache@v6
+      with:
+        path: ./build/libtorch
+        key: ${{ runner.os }}-libtorch-${{ hashFiles('CMakeLists.txt') }}
+        enableCrossOsArchive: true
+    - name: Prepare
+      run: |
+        security create-keychain -p ${{ secrets.DEV_ID_PASSWORD }} buildagent
+        security unlock-keychain -p ${{ secrets.DEV_ID_PASSWORD }} buildagent
+        security list-keychains -s buildagent && security default-keychain -s buildagent
+        echo ${{ secrets.DEV_ID_APP_CERT }} | base64 --decode > ./cert.p12
+        security import ./cert.p12 -P ${{ secrets.DEV_ID_PASSWORD }} -A -t cert -f pkcs12 -k buildagent -T /usr/bin/codesign >/dev/null
+        rm ./cert.p12
+        echo ${{ secrets.DEV_ID_INST_CERT }} | base64 --decode > ./cert.p12
+        security import ./cert.p12 -P ${{ secrets.DEV_ID_PASSWORD }} -A -t cert -f pkcs12 -k buildagent -T /usr/bin/codesign >/dev/null
+        rm ./cert.p12
+        security set-key-partition-list -S "apple-tool:,apple:,codesign:" -s -k ${{ secrets.DEV_ID_PASSWORD }} buildagent >/dev/null
+        xcrun notarytool store-credentials "notary-installer" --apple-id ${{ secrets.DEV_USER_APPLE_ID }} --team-id ${{ secrets.DEV_TEAM_APPLE_ID }} --password ${{ secrets.DEV_SPEC_APP_PASSWORD }} >/dev/null
+    - name: Configure
+      run: cmake -B ${{ github.workspace }}/build -G "Xcode" -DVPP_CODESIGN_APPLE_KEYCHAIN_PROFILE_INSTALLER="notary-installer" -DVPP_NOTARIZE=ON -DIPT_VAMP_PLUGIN_BUILD_TAG=${{ env.tag_name }} -DIGNORE_PARTIELS_DEBUG=ON
+    - name: Build
+      run: |
+        security unlock-keychain -p ${{ secrets.DEV_ID_PASSWORD }} buildagent
+        security set-keychain-settings -lut 7200 buildagent
+        set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} | xcbeautify --renderer github-actions --disable-logging
+    - name: Artifact
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: IPT-MacOS
+        path: ${{ github.workspace }}/package/IPT-MacOS.pkg
+    - name: Release
+      uses: softprops/action-gh-release@v3
+      if: ${{ env.is_tagged == 'true' }}
+      with:
+        draft: true
+        prerelease: true
+        fail_on_unmatched_files: true
+        files: ${{ github.workspace }}/package/IPT-MacOS.pkg
