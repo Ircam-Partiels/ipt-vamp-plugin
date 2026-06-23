@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<document MiscModelVersion="132353" viewport_x="0" viewport_y="0" path="/Users/guillot/Git/ipt-vamp-plugin/resources/test.ptldoc"
+          grid="1" autoresize="1" samplerate="44100.0" channels="1" description="">
+  <reader>
+    <value file="/Users/guillot/Git/ipt-vamp-plugin/resources/flute.wav"
+           channel="0"/>
+  </reader>
+  <layout value="3a1a8c77cc504338a8cc8452b77cc31f"/>
+  <timeZoom MiscModelVersion="132353" globalRange_start="0.0" globalRange_end="19.54229024943311"
+            minimumLength="0.01160997732426304" visibleRange_start="0.2873382751395752"
+            visibleRange_end="18.42084410365454">
+    <grid MiscModelVersion="132353" tickReference="0.0" mainTickInterval="0"
+          tickPowerBase="2.0" tickDivisionFactor="10.0"/>
+  </timeZoom>
+  <transport MiscModelVersion="132353" startPlayhead="7.763574427056253" looping="0"
+             loopRange_start="0.0" loopRange_end="0.0" stopAtLoopEnd="0" autoScroll="1"
+             gain="1.0" magnetize="0"/>
+  <groups MiscModelVersion="132353" identifier="3a1a8c77cc504338a8cc8452b77cc31f"
+          name="Group 2" height="541" colour="ff3c0066" expanded="1" referenceid="">
+    <layout value="e05407b5a51f47fe87cdbb76656e2c29"/>
+    <layout value="bfbcaac411324d0dbc505c9013e24a4c"/>
+    <zoom MiscModelVersion="132353" globalRange_start="0.0" globalRange_end="1.0"
+          minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid MiscModelVersion="132353" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </zoom>
+  </groups>
+  <tracks MiscModelVersion="132353" identifier="bfbcaac411324d0dbc505c9013e24a4c"
+          name="Waveform" useInputResultsExtraThresholds="0" sampleRate="44100.0"
+          height="76" showInGroup="1" oscIdentifier="" sendViaOsc="0" zoomValueMode="1"
+          zoomLogScale="0" zoomLink="1">
+    <file path="" commit=""/>
+    <fileDescription path="" format="0" extension="" csvHeaderType="0" reaperType="0"
+                     columnSeparator="0" disableLabelEscaping="0" includeDescription="1"
+                     sdifFrameSignature="????" sdifMatrixSignature="????"/>
+    <description name="Waveform" inputDomain="0" maker="Factory" version="1" category=""
+                 details="Display the waveform of the audio." copyright="Partiels factory plugin.">
+      <defaultState blockSize="1024" stepSize="0" windowType="3"/>
+      <output identifier="peaks" name="Peak" description="Peak from the input signal"
+              unit="" hasFixedBinCount="1" binCount="1" hasKnownExtents="1"
+              minValue="-1.0" maxValue="1.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="1" sampleRate="0.0" hasDuration="0"/>
+    </description>
+    <key identifier="partiels-vamp-plugins:partielswaveform" feature="peaks"/>
+    <state blockSize="1024" stepSize="0" windowType="3"/>
+    <graphicsSettings font="Nunito Sans; 14.0 Regular" lineWidth="1.0">
+      <colours map="7" background="0" foreground="ff0090ff" duration="66000000"
+               text="0" shadow="0"/>
+      <labelLayout position="12.0" justification="0"/>
+    </graphicsSettings>
+    <channelsLayout value="1"/>
+    <valueZoom MiscModelVersion="132353" globalRange_start="-1.0" globalRange_end="1.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="-1.0"
+               visibleRange_end="1.0">
+      <grid MiscModelVersion="132353" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="132353" globalRange_start="0.0" globalRange_end="0.0"
+             minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="132353" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+  <tracks MiscModelVersion="132353" identifier="e05407b5a51f47fe87cdbb76656e2c29"
+          name="IPT" useInputResultsExtraThresholds="0" sampleRate="48000.0"
+          height="138" showInGroup="1" oscIdentifier="" sendViaOsc="0"
+          zoomValueMode="0" zoomLogScale="0" zoomLink="1">
+    <file path="" commit=""/>
+    <fileDescription path="" format="0" extension="" csvHeaderType="0" reaperType="0"
+                     columnSeparator="0" disableLabelEscaping="0" includeDescription="1"
+                     sdifFrameSignature="????" sdifMatrixSignature="????"/>
+    <description name="IPT" inputDomain="0" maker="Ircam" version="1" category=""
+                 details="Audio classification using IPT..." copyright="">
+      <defaultState blockSize="256" stepSize="0" windowType="3">
+        <parameters key="model" value="0.0"/>
+      </defaultState>
+      <parameters>
+        <value identifier="model" name="Model" description="The model used to generate the tokens"
+               unit="" minValue="0.0" maxValue="2.0" defaultValue="0.0" isQuantized="1"
+               quantizeStep="1.0">
+          <valueNames value="eguitar"/>
+          <valueNames value="flute"/>
+        </value>
+      </parameters>
+      <output identifier="marker" name="Category" description="The category of the audio content"
+              unit="" hasFixedBinCount="1" binCount="0" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="2" sampleRate="0.0" hasDuration="0"/>
+      <extraOutputs>
+        <value identifier="score" name="Score" description="The score of the detected category"
+               unit="" hasKnownExtents="1" minValue="0.0" maxValue="1.0" isQuantized="0"
+               quantizeStep="0.0"/>
+      </extraOutputs>
+      <extraOutputs>
+        <value identifier="occurences" name="Occurences" description="The number of consecutive occurrences of the category"
+               unit="" hasKnownExtents="1" minValue="1.0" maxValue="266.0" isQuantized="1"
+               quantizeStep="1.0"/>
+      </extraOutputs>
+    </description>
+    <key identifier="ircamipt:ipt" feature="marker"/>
+    <state blockSize="256" stepSize="0" windowType="3">
+      <parameters key="model" value="1.0"/>
+    </state>
+    <graphicsSettings font="Nunito Sans; 14.0 Regular" lineWidth="1.0">
+      <colours map="7" background="0" foreground="ff000000" duration="66000000"
+               text="ff000000" shadow="0"/>
+      <labelLayout position="12.0" justification="0"/>
+    </graphicsSettings>
+    <channelsLayout value="1"/>
+    <extraThresholds>
+      <value value="0.2676335275173187"/>
+    </extraThresholds>
+    <extraThresholds>
+      <value value="25.0"/>
+    </extraThresholds>
+    <valueZoom MiscModelVersion="132353" globalRange_start="0.0" globalRange_end="0.0"
+               minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="132353" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom MiscModelVersion="132353" globalRange_start="0.0" globalRange_end="0.0"
+             minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
+      <grid MiscModelVersion="132353" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+</document>
