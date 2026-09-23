@@ -29,11 +29,13 @@ jobs:
     - uses: actions/checkout@v7
       with:
         submodules: recursive
+    - name: Fetch model release metadata
+      run: cmake -DOUTPUT_DIR=${{ github.workspace }}/build -DGENERATE_ASSETS_ONLY=ON -P resources/download_model.cmake
     - name: Cache
       uses: actions/cache@v6
       with:
         path: ./build/models
-        key: models-${{ hashFiles('resources/download_model.cmake') }}
+        key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.json') }}
         enableCrossOsArchive: true
     - name: Configure
       run: cmake -DOUTPUT_DIR=${{ github.workspace }}/build -P resources/download_model.cmake
@@ -45,11 +47,13 @@ jobs:
     - uses: actions/checkout@v7
       with:
         submodules: recursive
+    - name: Fetch model release metadata
+      run: cmake -DOUTPUT_DIR=${{ github.workspace }}/build -DGENERATE_ASSETS_ONLY=ON -P resources/download_model.cmake
     - name: Cache
       uses: actions/cache@v6
       with:
         path: ./build/models
-        key: models-${{ hashFiles('resources/download_model.cmake') }}
+        key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.json') }}
         enableCrossOsArchive: true
     - name: Cache
       uses: actions/cache@v6
@@ -84,11 +88,13 @@ jobs:
     - uses: actions/checkout@v7
       with:
         submodules: recursive
+    - name: Fetch model release metadata
+      run: cmake -DOUTPUT_DIR=${{ github.workspace }}/build -DGENERATE_ASSETS_ONLY=ON -P resources/download_model.cmake
     - name: Cache
       uses: actions/cache@v6
       with:
         path: ./build/models
-        key: models-${{ hashFiles('resources/download_model.cmake') }}
+        key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.json') }}
         enableCrossOsArchive: true
     - name: Cache
       uses: actions/cache@v6
@@ -122,11 +128,13 @@ jobs:
       uses: actions/checkout@v7
       with:
         submodules: recursive
+    - name: Fetch model release metadata
+      run: cmake -DOUTPUT_DIR=${{ github.workspace }}/build -DGENERATE_ASSETS_ONLY=ON -P resources/download_model.cmake
     - name: Cache
       uses: actions/cache@v6
       with:
         path: ./build/models
-        key: models-${{ hashFiles('resources/download_model.cmake') }}
+        key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.json') }}
         enableCrossOsArchive: true
     - name: Cache
       uses: actions/cache@v6
