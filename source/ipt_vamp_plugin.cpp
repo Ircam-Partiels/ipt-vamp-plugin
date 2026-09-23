@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <iostream>
 #include <numeric>
+#include <regex>
 #include <vamp-sdk/PluginAdapter.h>
 
 #if defined(_MSC_VER)
@@ -288,7 +289,9 @@ Ipt::Plugin::ParameterList Ipt::Plugin::getParameterDescriptors() const
         param.unit = "";
         for(auto const& model : models)
         {
-            param.valueNames.push_back(model.filename().replace_extension().string());
+            auto modelName = model.filename().replace_extension().string();
+            modelName = std::regex_replace(modelName, std::regex("^[0-9]{2}_"), "");
+            param.valueNames.push_back(std::move(modelName));
         }
         param.minValue = 0.0f;
         param.maxValue = models.empty() ? 0.0f : static_cast<float>(models.size() - 1);
