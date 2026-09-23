@@ -32,7 +32,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STR
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE CACHE BOOL "Default value for POSITION_INDEPENDENT_CODE of targets" FORCE)
 
 ### Project ###
-project(IptVampPlugin VERSION 1.0.0 LANGUAGES C CXX)
+project(IptVampPlugin VERSION 1.2.0 LANGUAGES C CXX)
 
 ### Include Vamp (IVE) ###
 set(IVE_BUILD_HOST_LIBRARY OFF)
