@@ -30,6 +30,8 @@ jobs:
       with:
         submodules: recursive
     - name: Fetch model release metadata
+      env:
+          GITHUB_TOKEN: ${{ github.token }}
       run: cmake -DOUTPUT_DIR=${{ github.workspace }}/build -DGENERATE_ASSETS_ONLY=ON -P resources/download_model.cmake
     - name: Cache
       uses: actions/cache@v6
@@ -38,6 +40,8 @@ jobs:
         key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.json') }}
         enableCrossOsArchive: true
     - name: Configure
+      env:
+          GITHUB_TOKEN: ${{ github.token }}
       run: cmake -DOUTPUT_DIR=${{ github.workspace }}/build -P resources/download_model.cmake
   # Compiles and packages the plugin for Ubuntu.
   Ubuntu:
@@ -48,6 +52,8 @@ jobs:
       with:
         submodules: recursive
     - name: Fetch model release metadata
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: cmake -DOUTPUT_DIR=${{ github.workspace }}/build -DGENERATE_ASSETS_ONLY=ON -P resources/download_model.cmake
     - name: Cache
       uses: actions/cache@v6
@@ -89,6 +95,8 @@ jobs:
       with:
         submodules: recursive
     - name: Fetch model release metadata
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: cmake -DOUTPUT_DIR=${{ github.workspace }}/build -DGENERATE_ASSETS_ONLY=ON -P resources/download_model.cmake
     - name: Cache
       uses: actions/cache@v6
@@ -129,6 +137,8 @@ jobs:
       with:
         submodules: recursive
     - name: Fetch model release metadata
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: cmake -DOUTPUT_DIR=${{ github.workspace }}/build -DGENERATE_ASSETS_ONLY=ON -P resources/download_model.cmake
     - name: Cache
       uses: actions/cache@v6
