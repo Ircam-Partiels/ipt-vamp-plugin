@@ -163,70 +163,70 @@ elseif(UNIX)
     )
 elseif(WIN32)
 
-    function(download_and_extract url output_dir)
-      get_filename_component(filename "${url}" NAME)
-      set(filename "${CMAKE_CURRENT_BINARY_DIR}/${filename}")
-      if(NOT EXISTS "${output_dir}")
-        message(STATUS "Downloading ${url} to ${filename}")
-        file(DOWNLOAD ${url} "${filename}")
-        file(MAKE_DIRECTORY "${output_dir}")
-        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${filename}" WORKING_DIRECTORY "${output_dir}")
-        if(filename MATCHES "\\.conda$")
-          file(GLOB inner_tar "${output_dir}/pkg-*.tar.zst")
-          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${inner_tar}" WORKING_DIRECTORY "${output_dir}")
-        endif()
+  function(download_and_extract url output_dir)
+    get_filename_component(filename "${url}" NAME)
+    set(filename "${CMAKE_CURRENT_BINARY_DIR}/${filename}")
+    if(NOT EXISTS "${output_dir}")
+      message(STATUS "Downloading ${url} to ${filename}")
+      file(DOWNLOAD ${url} "${filename}")
+      file(MAKE_DIRECTORY "${output_dir}")
+      execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${filename}" WORKING_DIRECTORY "${output_dir}")
+      if(filename MATCHES "\\.conda$")
+        file(GLOB inner_tar "${output_dir}/pkg-*.tar.zst")
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${inner_tar}" WORKING_DIRECTORY "${output_dir}")
       endif()
-    endfunction()
+    endif()
+  endfunction()
 
-    set(MKL_URL "https://repo.anaconda.com/pkgs/main/win-64/mkl-2023.1.0-h6b88ed4_46358.tar.bz2")
-    set(MKL_DIR "${CMAKE_CURRENT_BINARY_DIR}/mkl")
-    download_and_extract(${MKL_URL} ${MKL_DIR})
+  set(MKL_URL "https://repo.anaconda.com/pkgs/main/win-64/mkl-2023.1.0-h6b88ed4_46358.tar.bz2")
+  set(MKL_DIR "${CMAKE_CURRENT_BINARY_DIR}/mkl")
+  download_and_extract(${MKL_URL} ${MKL_DIR})
 
-    set(INTEL_OPENMP_URL "https://repo.anaconda.com/pkgs/main/win-64/intel-openmp-2023.1.0-h59b6b97_46320.conda")
-    set(INTEL_OPENMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/intel-openmp")
-    download_and_extract(${INTEL_OPENMP_URL} ${INTEL_OPENMP_DIR})
+  set(INTEL_OPENMP_URL "https://repo.anaconda.com/pkgs/main/win-64/intel-openmp-2023.1.0-h59b6b97_46320.conda")
+  set(INTEL_OPENMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/intel-openmp")
+  download_and_extract(${INTEL_OPENMP_URL} ${INTEL_OPENMP_DIR})
 
-    set(UV_URL "https://repo.anaconda.com/pkgs/main/win-64/libuv-1.48.0-h827c3e9_0.tar.bz2")
-    set(UV_DIR "${CMAKE_CURRENT_BINARY_DIR}/uv")
-    download_and_extract(${UV_URL} ${UV_DIR})
+  set(UV_URL "https://repo.anaconda.com/pkgs/main/win-64/libuv-1.48.0-h827c3e9_0.tar.bz2")
+  set(UV_DIR "${CMAKE_CURRENT_BINARY_DIR}/uv")
+  download_and_extract(${UV_URL} ${UV_DIR})
 
-    set(PYTORCH_DLLS
-      "${TORCH_INSTALL_PREFIX}/lib/torch_cpu.dll"
-      "${TORCH_INSTALL_PREFIX}/lib/c10.dll"
-      "${TORCH_INSTALL_PREFIX}/lib/fbgemm.dll"
-      "${TORCH_INSTALL_PREFIX}/lib/asmjit.dll"
-      "${MKL_DIR}/Library/bin/mkl_core.2.dll"
-      "${MKL_DIR}/Library/bin/mkl_intel_thread.2.dll"
-      "${MKL_DIR}/Library/bin/mkl_avx2.2.dll"
-      "${MKL_DIR}/Library/bin/mkl_core.2.dll"
-      "${MKL_DIR}/Library/bin/mkl_def.2.dll"
-      "${MKL_DIR}/Library/bin/mkl_intel_thread.2.dll"
-      "${MKL_DIR}/Library/bin/mkl_vml_avx2.2.dll"
-      "${MKL_DIR}/Library/bin/mkl_vml_def.2.dll"
-      "${INTEL_OPENMP_DIR}/Library/bin/libiomp5md.dll"
-      "${UV_DIR}/Library/bin/uv.dll"
-    )
+  set(PYTORCH_DLLS
+    "${TORCH_INSTALL_PREFIX}/lib/torch_cpu.dll"
+    "${TORCH_INSTALL_PREFIX}/lib/c10.dll"
+    "${TORCH_INSTALL_PREFIX}/lib/fbgemm.dll"
+    "${TORCH_INSTALL_PREFIX}/lib/asmjit.dll"
+    "${MKL_DIR}/Library/bin/mkl_core.2.dll"
+    "${MKL_DIR}/Library/bin/mkl_intel_thread.2.dll"
+    "${MKL_DIR}/Library/bin/mkl_avx2.2.dll"
+    "${MKL_DIR}/Library/bin/mkl_core.2.dll"
+    "${MKL_DIR}/Library/bin/mkl_def.2.dll"
+    "${MKL_DIR}/Library/bin/mkl_intel_thread.2.dll"
+    "${MKL_DIR}/Library/bin/mkl_vml_avx2.2.dll"
+    "${MKL_DIR}/Library/bin/mkl_vml_def.2.dll"
+    "${INTEL_OPENMP_DIR}/Library/bin/libiomp5md.dll"
+    "${UV_DIR}/Library/bin/uv.dll"
+  )
 
-    set_target_properties(ipt_vamp_plugin PROPERTIES 
-      BUNDLE TRUE
-      OUTPUT_NAME "ircamipt"
-      PREFIX ""
-      BUNDLE_EXTENSION "vamp"
-    )
-    add_custom_command(TARGET ipt_vamp_plugin POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-win"
-      COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/Resources/models"
-      COMMAND ${CMAKE_COMMAND} -E copy
-        "$<TARGET_FILE:ipt_vamp_plugin>"
-        "${CMAKE_CURRENT_SOURCE_DIR}/source/ircamipt.cat"
-        "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-win"
-      COMMAND ${CMAKE_COMMAND} -E copy
-        ${PYTORCH_DLLS}
-        "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-win"
-      COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_CURRENT_BINARY_DIR}/models/"
-        "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/Resources/models"
-    )
+  set_target_properties(ipt_vamp_plugin PROPERTIES 
+    BUNDLE TRUE
+    OUTPUT_NAME "ircamipt"
+    PREFIX ""
+    BUNDLE_EXTENSION "vamp"
+  )
+  add_custom_command(TARGET ipt_vamp_plugin POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-win"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/Resources/models"
+    COMMAND ${CMAKE_COMMAND} -E copy
+      "$<TARGET_FILE:ipt_vamp_plugin>"
+      "${CMAKE_CURRENT_SOURCE_DIR}/source/ircamipt.cat"
+      "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-win"
+    COMMAND ${CMAKE_COMMAND} -E copy
+      ${PYTORCH_DLLS}
+      "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-win"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+      "${CMAKE_CURRENT_BINARY_DIR}/models/"
+      "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/Resources/models"
+  )
 endif()
 
 vpp_add_plugin(ipt_vamp_plugin ${CMAKE_CURRENT_SOURCE_DIR}/source/ircamipt.cat)
