@@ -63,9 +63,13 @@ jobs:
         path: ./build/libtorch
         key: ${{ runner.os }}-libtorch-${{ hashFiles('CMakeLists.txt') }}
         enableCrossOsArchive: true
+    - name: Download MKL runtime
+      run: |
+        conda create -y -p "${{ github.workspace }}/build/mkl-env" --override-channels -c defaults mkl
+        ls -aR "${{ github.workspace }}/build/mkl-env"
     - uses: seanmiddleditch/gha-setup-ninja@master
     - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DCMAKE_C_COMPILER="/usr/bin/clang" -DCMAKE_CXX_COMPILER="/usr/bin/clang++" -DIPT_VAMP_PLUGIN_BUILD_TAG=${{ env.tag_name }} -DIGNORE_PARTIELS_DEBUG=ON
+      run: cmake -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DCMAKE_C_COMPILER="/usr/bin/clang" -DCMAKE_CXX_COMPILER="/usr/bin/clang++" -DIPT_VAMP_PLUGIN_BUILD_TAG=${{ env.tag_name }} -DIPT_VAMP_PLUGIN_MKL_DIR="${{ github.workspace }}/build/mkl-env" -DIGNORE_PARTIELS_DEBUG=ON
     - name: Build
       run: cmake --build ${{ github.workspace }}/build
     - name: Artifact

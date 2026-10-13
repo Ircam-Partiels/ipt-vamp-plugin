@@ -20,6 +20,9 @@ cmake_minimum_required(VERSION 3.19)
 option(IGNORE_PARTIELS_DEBUG "Disables the debug scheme using the Partiels application" OFF)
 option(IPT_VAMP_PLUGIN_REFRESH_MODEL "Force re-download and re-export of the IPT model during CMake configure" OFF)
 
+# MKL runtime environment (required on Linux)
+set(IPT_VAMP_PLUGIN_MKL_DIR "" CACHE PATH "Directory of the MKL runtime environment (required on Linux)")
+
 # LibTorch Configuration (Configurable via CMake options)
 set(LIBTORCH_VERSION "2.4.1" CACHE STRING "Version of LibTorch to download")
 set(LIBTORCH_PYTHON_VERSION "3.12" CACHE STRING "Python version for LibTorch")
@@ -137,6 +140,9 @@ if(APPLE)
     COMMAND ${CMAKE_COMMAND} -E echo "BNDL????" > "$<TARGET_BUNDLE_CONTENT_DIR:ipt_vamp_plugin>/PkgInfo"
   )
 elseif(UNIX)
+    if(NOT IPT_VAMP_PLUGIN_MKL_DIR)
+      message(FATAL_ERROR "IPT_VAMP_PLUGIN_MKL_DIR is not set: define it with the path to the MKL runtime environment (e.g. a conda env containing MKL).")
+    endif()
     set_target_properties(ipt_vamp_plugin PROPERTIES 
       BUNDLE TRUE
       OUTPUT_NAME "ircamipt"
@@ -156,6 +162,9 @@ elseif(UNIX)
         "${TORCH_INSTALL_PREFIX}/lib/libtorch.so"
         "${TORCH_INSTALL_PREFIX}/lib/libtorch_cpu.so"
         "${TORCH_INSTALL_PREFIX}/lib/libc10.so"
+        "${IPT_VAMP_PLUGIN_MKL_DIR}/lib/libmkl_intel_lp64.so.2"
+        "${IPT_VAMP_PLUGIN_MKL_DIR}/lib/libmkl_gnu_thread.so.2"
+        "${IPT_VAMP_PLUGIN_MKL_DIR}/lib/libmkl_core.so.2"
         "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-linux/libs"
       COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_BINARY_DIR}/models/"
