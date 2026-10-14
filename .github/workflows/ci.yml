@@ -67,7 +67,7 @@ jobs:
     - name: Build
       run: cmake --build ${{ github.workspace }}/build
     - name: Artifact
-      uses: actions/upload-artifact@v7.0.1
+      uses: actions/upload-artifact@v7.0.2
       with:
         name: IPT-Linux
         path: ${{ github.workspace }}/package/IPT-Linux.tar.gz
@@ -107,7 +107,7 @@ jobs:
     - name: Build
       run: cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }}
     - name: Artifact
-      uses: actions/upload-artifact@v7.0.1
+      uses: actions/upload-artifact@v7.0.2
       with:
         name: IPT-Windows
         path: ${{ github.workspace }}/package/IPT-Windows.exe
@@ -163,7 +163,7 @@ jobs:
         security set-keychain-settings -lut 7200 buildagent
         set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} | xcbeautify --renderer github-actions --disable-logging
     - name: Artifact
-      uses: actions/upload-artifact@v7.0.1
+      uses: actions/upload-artifact@v7.0.2
       with:
         name: IPT-MacOS
         path: ${{ github.workspace }}/package/IPT-MacOS.pkg
