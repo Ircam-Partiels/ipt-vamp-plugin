@@ -20,9 +20,6 @@ cmake_minimum_required(VERSION 3.19)
 option(IGNORE_PARTIELS_DEBUG "Disables the debug scheme using the Partiels application" OFF)
 option(IPT_VAMP_PLUGIN_REFRESH_MODEL "Force re-download and re-export of the IPT model during CMake configure" OFF)
 
-# MKL runtime environment (required on Linux)
-set(IPT_VAMP_PLUGIN_MKL_DIR "" CACHE PATH "Directory of the MKL runtime environment (required on Linux)")
-
 # LibTorch Configuration (Configurable via CMake options)
 set(LIBTORCH_VERSION "2.4.1" CACHE STRING "Version of LibTorch to download")
 set(LIBTORCH_PYTHON_VERSION "3.12" CACHE STRING "Python version for LibTorch")
@@ -49,7 +46,13 @@ set(LIBTORCH_DIR "${CMAKE_CURRENT_BINARY_DIR}/libtorch")
 if(APPLE)
   set(LIBTORCH_URL "https://anaconda.org/pytorch/pytorch/${LIBTORCH_VERSION}/download/osx-arm64/pytorch-${LIBTORCH_VERSION}-py${LIBTORCH_PYTHON_VERSION}_0.tar.bz2")
 elseif(UNIX)
-  set(LIBTORCH_URL "https://anaconda.org/pytorch/pytorch/${LIBTORCH_VERSION}/download/linux-64/pytorch-${LIBTORCH_VERSION}-py${LIBTORCH_PYTHON_VERSION}_cpu_0.tar.bz2")
+  ### speficy CXX11_abi version for UNIX ###
+  option(LIBTORCH_USE_CXX11_ABI "Download the cxx11-abi version of LibTorch on Linux" ON)
+  if(LIBTORCH_USE_CXX11_ABI)
+    set(LIBTORCH_URL "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}%2Bcpu.zip")
+  else()
+    set(LIBTORCH_URL "https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-${LIBTORCH_VERSION}%2Bcpu.zip")
+  endif()
 elseif(WIN32)
   set(LIBTORCH_URL "https://anaconda.org/pytorch/pytorch/${LIBTORCH_VERSION}/download/win-64/pytorch-${LIBTORCH_VERSION}-py${LIBTORCH_PYTHON_VERSION}_cpu_0.tar.bz2")
 endif()
@@ -67,9 +70,12 @@ endif()
 if(WIN32)
   set(TORCH_INSTALL_PREFIX "${LIBTORCH_DIR}/Lib/site-packages/torch")
   find_package(Torch REQUIRED HINTS "${LIBTORCH_DIR}/Lib/site-packages/torch/share/cmake")
-else()
+elseif(APPLE)
   set(TORCH_INSTALL_PREFIX "${LIBTORCH_DIR}/lib/python${LIBTORCH_PYTHON_VERSION}/site-packages/torch")
   find_package(Torch REQUIRED HINTS "${LIBTORCH_DIR}/lib/python${LIBTORCH_PYTHON_VERSION}/site-packages/torch/share/cmake")
+else()
+  set(TORCH_INSTALL_PREFIX "${LIBTORCH_DIR}")
+  find_package(Torch REQUIRED HINTS "${LIBTORCH_DIR}/share/cmake")
 endif()
 
 
@@ -140,36 +146,34 @@ if(APPLE)
     COMMAND ${CMAKE_COMMAND} -E echo "BNDL????" > "$<TARGET_BUNDLE_CONTENT_DIR:ipt_vamp_plugin>/PkgInfo"
   )
 elseif(UNIX)
-    if(NOT IPT_VAMP_PLUGIN_MKL_DIR)
-      message(FATAL_ERROR "IPT_VAMP_PLUGIN_MKL_DIR is not set: define it with the path to the MKL runtime environment (e.g. a conda env containing MKL).")
-    endif()
-    set_target_properties(ipt_vamp_plugin PROPERTIES 
-      BUNDLE TRUE
-      OUTPUT_NAME "ircamipt"
-      PREFIX ""
-      BUNDLE_EXTENSION "vamp"
-      BUILD_WITH_INSTALL_RPATH FALSE
-      BUILD_RPATH "$ORIGIN/libs"
-      INSTALL_RPATH "$ORIGIN/libs"
-    )
-    add_custom_command(TARGET ipt_vamp_plugin POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-linux/libs"
-      COMMAND ${CMAKE_COMMAND} -E copy
-        "$<TARGET_FILE:ipt_vamp_plugin>"
-        "${CMAKE_CURRENT_SOURCE_DIR}/source/ircamipt.cat"
-        "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-linux"
-      COMMAND ${CMAKE_COMMAND} -E copy
-        "${TORCH_INSTALL_PREFIX}/lib/libtorch.so"
-        "${TORCH_INSTALL_PREFIX}/lib/libtorch_cpu.so"
-        "${TORCH_INSTALL_PREFIX}/lib/libc10.so"
-        "${IPT_VAMP_PLUGIN_MKL_DIR}/lib/libmkl_intel_lp64.so.2"
-        "${IPT_VAMP_PLUGIN_MKL_DIR}/lib/libmkl_gnu_thread.so.2"
-        "${IPT_VAMP_PLUGIN_MKL_DIR}/lib/libmkl_core.so.2"
-        "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-linux/libs"
-      COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_CURRENT_BINARY_DIR}/models/"
-        "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/Resources/models"
-    )
+set_target_properties(ipt_vamp_plugin PROPERTIES 
+  BUNDLE TRUE
+  OUTPUT_NAME "ircamipt"
+  PREFIX ""
+  BUNDLE_EXTENSION "vamp"
+  BUILD_WITH_INSTALL_RPATH FALSE
+  BUILD_RPATH "$ORIGIN/libs"
+  INSTALL_RPATH "$ORIGIN/libs"
+)
+file(GLOB TORCH_GOMP_LIBS "${TORCH_INSTALL_PREFIX}/lib/libgomp*.so*")
+add_custom_command(TARGET ipt_vamp_plugin POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-linux/libs"
+  COMMAND ${CMAKE_COMMAND} -E copy
+	"$<TARGET_FILE:ipt_vamp_plugin>"
+	"${CMAKE_CURRENT_SOURCE_DIR}/source/ircamipt.cat"
+	"$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-linux"
+  COMMAND ${CMAKE_COMMAND} -E rm -f
+	"$<TARGET_FILE:ipt_vamp_plugin>"
+  COMMAND ${CMAKE_COMMAND} -E copy
+	"${TORCH_INSTALL_PREFIX}/lib/libtorch.so"
+	"${TORCH_INSTALL_PREFIX}/lib/libtorch_cpu.so"
+	"${TORCH_INSTALL_PREFIX}/lib/libc10.so"
+	${TORCH_GOMP_LIBS}
+	"$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/x86_64-linux/libs"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+	"${CMAKE_CURRENT_BINARY_DIR}/models/"
+	"$<TARGET_FILE_DIR:ipt_vamp_plugin>/ircamipt.vamp/Contents/Resources/models"
+)
 elseif(WIN32)
 
   function(download_and_extract url output_dir)
