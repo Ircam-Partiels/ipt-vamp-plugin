@@ -7,6 +7,9 @@
 #include <numeric>
 #include <regex>
 #include <vamp-sdk/PluginAdapter.h>
+#if defined(__unix__)
+#include <dlfcn.h>
+#endif
 
 #if defined(_MSC_VER)
 #define forcedinline __forceinline
@@ -24,11 +27,37 @@
 
 namespace Ipt
 {
+#if (defined(__unix__))
+    static std::filesystem::path getContentsDir()
+    {
+        static auto const dir = []() -> std::filesystem::path
+        {
+            try
+            {
+                Dl_info info;
+                if(dladdr(reinterpret_cast<void const*>(&getContentsDir), &info) != 0 && info.dli_fname != nullptr)
+                {
+                    return std::filesystem::absolute(std::filesystem::path(info.dli_fname)).parent_path().parent_path();
+                }
+            }
+            catch(...)
+            {
+            }
+            return std::filesystem::current_path() / "Contents";
+        }();
+        return dir;
+    }
+#else
     static std::filesystem::path const executableDir = std::filesystem::current_path();
+#endif
 
     static std::vector<std::filesystem::path> getModelPaths()
     {
+#if (defined(__unix__))
+        auto const resourcesDir = getContentsDir() / "Resources" / "models";
+#else
         static auto const resourcesDir = executableDir / "Contents" / "Resources" / "models";
+#endif
         std::vector<std::filesystem::path> modelPaths;
         if(!std::filesystem::exists(resourcesDir))
         {
