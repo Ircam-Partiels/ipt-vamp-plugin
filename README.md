@@ -14,7 +14,7 @@ cmake --build build
 ```
 
 ## Credits
-- **[IPT Vamp plugin](https://www.ircam.fr/)** by Pierre Guillot at [IRCAM IMR department](https://www.ircam.fr/).  
+- **[IPT Vamp plugin](https://www.ircam.fr/)** by Pierre Guillot, Gaston Fontagneu at [IRCAM IMR department](https://www.ircam.fr/).  
 - **[IPT](http://repmus.ircam.fr/ipt/home)** by Nicolas Brochec, Joakim Borg, and Marco Fiorini at IRCAM.
 - **[Vamp SDK](https://github.com/vamp-plugins/vamp-plugin-sdk)** by Chris Cannam, copyright (c) 2005-2024 Chris Cannam and Centre for Digital Music, Queen Mary, University of London.
 - **[Ircam Vamp Extension](https://github.com/Ircam-Partiels/ircam-vamp-extension)** by Pierre Guillot at [IRCAM IMR department](https://www.ircam.fr/).  
