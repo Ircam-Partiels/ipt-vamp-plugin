@@ -72,7 +72,7 @@
                      sdifFrameSignature="????" sdifMatrixSignature="????"/>
     <description name="IPT" inputDomain="0" maker="Ircam" version="1" category=""
                  details="Audio classification, a toolkit for the real-time recognition of instrumental playing techniques using deep learning CNN models, developed at Ircam and Tokyo University of the Arts, and supported by the European Research Council (ERC) as part of the Raising Co-creativity in Cyber-Human Musicianship (REACH) Project directed by G&#233;rard Assayag, under the European Union's Horizon 2020 research and innovation program (GA #883313)."
-                 copyright="IPT by Nicolas Brochec, Joakim Borg, and Marco Fiorini. IPT Vamp plug-in by Pierre Guillot at Ircam.">
+                 copyright="IPT by Nicolas Brochec, Joakim Borg, and Marco Fiorini. IPT Vamp plug-in by Pierre Guillot, Gaston Fontagneu at Ircam.">
       <defaultState blockSize="256" stepSize="0" windowType="3">
         <parameters key="model" value="0.0"/>
       </defaultState>
