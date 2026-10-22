@@ -7,8 +7,15 @@
 #include <numeric>
 #include <regex>
 #include <vamp-sdk/PluginAdapter.h>
-#if defined(__unix__)
+#ifdef __APPLE__
+#include <torch/mps.h>
+#endif
+#if !defined(_WIN32)
 #include <dlfcn.h>
+#else
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #endif
 
 #if defined(_MSC_VER)
@@ -27,37 +34,43 @@
 
 namespace Ipt
 {
-#if (defined(__unix__))
     static std::filesystem::path getContentsDir()
     {
         static auto const dir = []() -> std::filesystem::path
         {
-            try
+#if !defined(_WIN32)
+            Dl_info info;
+            if(dladdr(reinterpret_cast<void const*>(&getContentsDir), &info) != 0 && info.dli_fname != nullptr)
             {
-                Dl_info info;
-                if(dladdr(reinterpret_cast<void const*>(&getContentsDir), &info) != 0 && info.dli_fname != nullptr)
+                return std::filesystem::absolute(std::filesystem::path(info.dli_fname)).parent_path().parent_path();
+            }
+#else
+            HMODULE module = nullptr;
+            if(GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, reinterpret_cast<LPWSTR>(&getContentsDir), &module) != 0)
+            {
+                std::vector<wchar_t> filename(MAX_PATH);
+                auto capacity = static_cast<DWORD>(filename.size());
+                auto length = GetModuleFileNameW(module, filename.data(), capacity);
+                while(length == capacity)
                 {
-                    return std::filesystem::absolute(std::filesystem::path(info.dli_fname)).parent_path().parent_path();
+                    filename.resize(filename.size() * 2);
+                    capacity = static_cast<DWORD>(filename.size());
+                    length = GetModuleFileNameW(module, filename.data(), capacity);
+                }
+                if(length != 0)
+                {
+                    return std::filesystem::path(filename.data()).parent_path().parent_path();
                 }
             }
-            catch(...)
-            {
-            }
+#endif
             return std::filesystem::current_path() / "Contents";
         }();
         return dir;
     }
-#else
-    static std::filesystem::path const executableDir = std::filesystem::current_path();
-#endif
 
     static std::vector<std::filesystem::path> getModelPaths()
     {
-#if (defined(__unix__))
         auto const resourcesDir = getContentsDir() / "Resources" / "models";
-#else
-        static auto const resourcesDir = executableDir / "Contents" / "Resources" / "models";
-#endif
         std::vector<std::filesystem::path> modelPaths;
         if(!std::filesystem::exists(resourcesDir))
         {
@@ -224,7 +237,8 @@ bool Ipt::Plugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
     mModel = torch::jit::load(model.string());
     mModel.eval();
 #ifdef __APPLE__
-    mModel.to(kDeviceType);
+    mDevice = torch::mps::is_available() ? kDeviceType : torch::kCPU;
+    mModel.to(mDevice);
 #endif
 
     mModelSampleRate = static_cast<double>(mModel.get_method(kSampleRateMethod)(std::vector<c10::IValue>()).to<int>());
@@ -264,7 +278,7 @@ std::string Ipt::Plugin::getMaker() const
 
 int Ipt::Plugin::getPluginVersion() const
 {
-    return IPT_VAMP_PLUGIN_PLUGIN_VERSION;
+    return PLUGIN_VERSION;
 }
 
 std::string Ipt::Plugin::getCopyright() const
@@ -406,7 +420,7 @@ void Ipt::Plugin::runModel(FeatureList& list)
     auto const hopSizeSamples = static_cast<size_t>(static_cast<double>(mModelSampleRate) * kSegmentHopSizeMs / 1000.0);
 
 #ifdef __APPLE__
-    auto tensorIn = torch::from_blob(mFlatInputs.data(), {static_cast<long long>(mFlatIndices.size()), 1, static_cast<long long>(mModelSegmentLength)}, torch::kFloat32).to(kDeviceType);
+    auto tensorIn = torch::from_blob(mFlatInputs.data(), {static_cast<long long>(mFlatIndices.size()), 1, static_cast<long long>(mModelSegmentLength)}, torch::kFloat32).to(mDevice);
 #else
     auto tensorIn = torch::from_blob(mFlatInputs.data(), {static_cast<long long>(mFlatIndices.size()), 1, static_cast<long long>(mModelSegmentLength)}, torch::kFloat32);
 #endif

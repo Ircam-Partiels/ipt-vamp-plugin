@@ -56,6 +56,7 @@ namespace Ipt
         static auto constexpr kBatchSize = 512;
 #ifdef __APPLE__
         static auto constexpr kDeviceType = torch::DeviceType::MPS;
+        torch::DeviceType mDevice{torch::kCPU};
 #endif
 
         class Resampler

@@ -21,7 +21,8 @@ jobs:
       with:
         clang-format-version: '22'
         check-path: '.'
-  # Creates a cache for the model downloaded
+  # Creates a cache for the models downloaded from the releases
+  # and copied into the Contents directory of the Vamp bundle.
   Cache:
     runs-on: ubuntu-latest
     needs: Format
@@ -39,13 +40,13 @@ jobs:
         path: ./build/models
         key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.json') }}
         enableCrossOsArchive: true
-    - name: Configure
+    - name: Download
       env:
           GITHUB_TOKEN: ${{ github.token }}
       run: cmake -DOUTPUT_DIR=${{ github.workspace }}/build -P resources/download_model.cmake
-  # Compiles and packages the plugin for Ubuntu.
+  # Compiles, tests and packages the plugin for Ubuntu.
   Ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: Cache
     steps:
     - uses: actions/checkout@v7
@@ -69,14 +70,21 @@ jobs:
         enableCrossOsArchive: true
     - uses: seanmiddleditch/gha-setup-ninja@master
     - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DCMAKE_C_COMPILER="/usr/bin/clang" -DCMAKE_CXX_COMPILER="/usr/bin/clang++" -DIPT_VAMP_PLUGIN_BUILD_TAG=${{ env.tag_name }} -DIGNORE_PARTIELS_DEBUG=ON
+      run: cmake -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DCMAKE_C_COMPILER="/usr/bin/clang" -DCMAKE_CXX_COMPILER="/usr/bin/clang++" -DIPT_VAMP_PLUGIN_BUILD_TAG=${{ env.tag_name }} -DIPT_VAMP_PLUGIN_ENABLE_DEBUG=OFF
     - name: Build
       run: cmake --build ${{ github.workspace }}/build
+    - name: Test
+      run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build
+    - name: CommonPackage Artifact
+      uses: actions/upload-artifact@v7.0.2
+      with:
+        name: IPT-CommonPackage-Linux
+        path: ${{ github.workspace }}/build/${{ env.build_type }}/ircamipt.vamp
     - name: Artifact
       uses: actions/upload-artifact@v7.0.2
       with:
         name: IPT-Linux
-        path: ${{ github.workspace }}/package/IPT-Linux.tar.gz
+        path: ${{ github.workspace }}/build/IPT
     - name: Release
       uses: softprops/action-gh-release@v3
       if: ${{ env.is_tagged == 'true' }}
@@ -85,12 +93,14 @@ jobs:
         prerelease: true
         fail_on_unmatched_files: true
         generate_release_notes: true
-        files: ${{ github.workspace }}/package/IPT-Linux.tar.gz
-  # Compiles and packages the plugin for Windows.
+        body_path: ${{ github.workspace }}/build/ipt-release.md
+        files: ${{ github.workspace }}/package/IPT-Linux.zip
+  # Compiles, tests and packages the plugin for Windows.
   Windows:
     runs-on: windows-latest
     needs: Cache
     steps:
+    - run: git config --global core.longpaths true
     - uses: actions/checkout@v7
       with:
         submodules: recursive
@@ -110,10 +120,22 @@ jobs:
         path: ./build/libtorch
         key: ${{ runner.os }}-libtorch-${{ hashFiles('CMakeLists.txt') }}
         enableCrossOsArchive: true
+    - name: Developer Command Prompt
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+    - uses: seanmiddleditch/gha-setup-ninja@master
     - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -G "Visual Studio 18 2026" -A x64 -DIPT_VAMP_PLUGIN_BUILD_TAG="${{ env.tag_name }}" -DIGNORE_PARTIELS_DEBUG=ON
+      run: cmake -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DIPT_VAMP_PLUGIN_BUILD_TAG="${{ env.tag_name }}" -DIPT_VAMP_PLUGIN_ENABLE_DEBUG=OFF
     - name: Build
-      run: cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }}
+      run: cmake --build ${{ github.workspace }}/build
+    - name: Test
+      run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build
+    - name: CommonPackage Artifact
+      uses: actions/upload-artifact@v7.0.2
+      with:
+        name: IPT-CommonPackage-Windows
+        path: ${{ github.workspace }}/build/${{ env.build_type }}/ircamipt.vamp
     - name: Artifact
       uses: actions/upload-artifact@v7.0.2
       with:
@@ -126,8 +148,10 @@ jobs:
         draft: true
         prerelease: true
         fail_on_unmatched_files: true
+        generate_release_notes: true
+        body_path: ${{ github.workspace }}/build/ipt-release.md
         files: ${{ github.workspace }}/package/IPT-Windows.exe
-  # Compiles and packages the plugin for MacOS.
+  # Compiles, tests and packages the plugin for MacOS.
   MacOS:
     runs-on: macos-latest
     needs: Cache
@@ -165,13 +189,21 @@ jobs:
         rm ./cert.p12
         security set-key-partition-list -S "apple-tool:,apple:,codesign:" -s -k ${{ secrets.DEV_ID_PASSWORD }} buildagent >/dev/null
         xcrun notarytool store-credentials "notary-installer" --apple-id ${{ secrets.DEV_USER_APPLE_ID }} --team-id ${{ secrets.DEV_TEAM_APPLE_ID }} --password ${{ secrets.DEV_SPEC_APP_PASSWORD }} >/dev/null
+    - uses: seanmiddleditch/gha-setup-ninja@master
     - name: Configure
-      run: cmake -B ${{ github.workspace }}/build -G "Xcode" -DVPP_CODESIGN_APPLE_KEYCHAIN_PROFILE_INSTALLER="notary-installer" -DVPP_NOTARIZE=ON -DIPT_VAMP_PLUGIN_BUILD_TAG=${{ env.tag_name }} -DIGNORE_PARTIELS_DEBUG=ON
+      run: cmake -B ${{ github.workspace }}/build -G Ninja -DVPP_CODESIGN_APPLE_KEYCHAIN_PROFILE_INSTALLER="notary-installer" -DVPP_NOTARIZE=ON -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DIPT_VAMP_PLUGIN_BUILD_TAG=${{ env.tag_name }} -DIPT_VAMP_PLUGIN_ENABLE_DEBUG=OFF
     - name: Build
       run: |
         security unlock-keychain -p ${{ secrets.DEV_ID_PASSWORD }} buildagent
         security set-keychain-settings -lut 7200 buildagent
-        set -o pipefail && cmake --build ${{ github.workspace }}/build --config ${{ env.build_type }} | xcbeautify --renderer github-actions --disable-logging
+        cmake --build ${{ github.workspace }}/build
+    - name: Test
+      run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build
+    - name: CommonPackage Artifact
+      uses: actions/upload-artifact@v7.0.2
+      with:
+        name: IPT-CommonPackage-MacOS
+        path: ${{ github.workspace }}/build/${{ env.build_type }}/ircamipt.vamp
     - name: Artifact
       uses: actions/upload-artifact@v7.0.2
       with:
@@ -184,4 +216,42 @@ jobs:
         draft: true
         prerelease: true
         fail_on_unmatched_files: true
+        generate_release_notes: true
+        body_path: ${{ github.workspace }}/build/ipt-release.md
         files: ${{ github.workspace }}/package/IPT-MacOS.pkg
+  # Packages the vamp plugins of the three operating systems for a common distribution package.
+  CommonPackage:
+    runs-on: ubuntu-latest
+    needs: [Ubuntu, Windows, MacOS]
+    steps:
+    - name: Download Linux
+      uses: actions/download-artifact@v6
+      with:
+        name: IPT-CommonPackage-Linux
+        path: ${{ github.workspace }}/dist/Linux/ircamipt.vamp
+    - name: Download MacOS
+      uses: actions/download-artifact@v6
+      with:
+        name: IPT-CommonPackage-MacOS
+        path: ${{ github.workspace }}/dist/MacOS/ircamipt.vamp
+    - name: Download Windows
+      uses: actions/download-artifact@v6
+      with:
+        name: IPT-CommonPackage-Windows
+        path: ${{ github.workspace }}/dist/Windows/ircamipt.vamp
+    - name: Package
+      run: cd ${{ github.workspace }}/dist && zip -r ../IPT-CommonPackage.zip Linux MacOS Windows
+    - name: Artifact
+      uses: actions/upload-artifact@v7.0.2
+      with:
+        name: IPT-CommonPackage
+        path: ${{ github.workspace }}/dist
+    - name: Release
+      uses: softprops/action-gh-release@v3
+      if: ${{ env.is_tagged == 'true' }}
+      with:
+        draft: true
+        prerelease: true
+        fail_on_unmatched_files: true
+        generate_release_notes: true
+        files: ${{ github.workspace }}/IPT-CommonPackage.zip
