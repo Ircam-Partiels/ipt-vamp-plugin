@@ -66,7 +66,7 @@ jobs:
       uses: actions/cache@v6
       with:
         path: ./build/libtorch
-        key: ${{ runner.os }}-libtorch-${{ hashFiles('CMakeLists.txt') }}
+        key: ${{ runner.os }}-libtorch-${{ hashFiles('resources/libtorch.cmake') }}
         enableCrossOsArchive: true
     - uses: seanmiddleditch/gha-setup-ninja@master
     - name: Configure
@@ -117,8 +117,12 @@ jobs:
     - name: Cache
       uses: actions/cache@v6
       with:
-        path: ./build/libtorch
-        key: ${{ runner.os }}-libtorch-${{ hashFiles('CMakeLists.txt') }}
+        path: |
+          ./build/libtorch
+          ./build/mkl
+          ./build/intel-openmp
+          ./build/uv
+        key: ${{ runner.os }}-libtorch-${{ hashFiles('resources/libtorch.cmake') }}
         enableCrossOsArchive: true
     - name: Developer Command Prompt
       uses: ilammy/msvc-dev-cmd@v1
@@ -174,7 +178,7 @@ jobs:
       uses: actions/cache@v6
       with:
         path: ./build/libtorch
-        key: ${{ runner.os }}-libtorch-${{ hashFiles('CMakeLists.txt') }}
+        key: ${{ runner.os }}-libtorch-${{ hashFiles('resources/libtorch.cmake') }}
         enableCrossOsArchive: true
     - name: Prepare
       run: |
