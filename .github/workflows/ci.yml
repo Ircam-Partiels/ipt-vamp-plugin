@@ -79,11 +79,13 @@ jobs:
       run: cmake --build ${{ github.workspace }}/build
     - name: Test
       run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build
-    - name: CommonPackage Artifact
+    - name: Package
+      run: cmake -E chdir ${{ github.workspace }}/build/${{ env.build_type }} cmake -E tar cf ${{ github.workspace }}/IPT-Vamp-Linux.zip --format=zip ircamipt.vamp
+    - name: Artifact
       uses: actions/upload-artifact@v7.0.2
       with:
-        name: IPT-CommonPackage-Linux
-        path: ${{ github.workspace }}/build/${{ env.build_type }}/ircamipt.vamp
+        name: IPT-Vamp-Linux
+        path: ${{ github.workspace }}/IPT-Vamp-Linux.zip
     - name: Artifact
       uses: actions/upload-artifact@v7.0.2
       with:
@@ -98,7 +100,9 @@ jobs:
         fail_on_unmatched_files: true
         generate_release_notes: true
         body_path: ${{ github.workspace }}/build/ipt-release.md
-        files: ${{ github.workspace }}/package/IPT-Linux.zip
+        files: |
+          ${{ github.workspace }}/package/IPT-Linux.zip
+          ${{ github.workspace }}/IPT-Vamp-Linux.zip
   # Compiles, tests and packages the plugin for Windows.
   Windows:
     runs-on: windows-latest
@@ -141,11 +145,13 @@ jobs:
       run: cmake --build ${{ github.workspace }}/build
     - name: Test
       run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build
-    - name: CommonPackage Artifact
+    - name: Package
+      run: cmake -E chdir ${{ github.workspace }}/build/${{ env.build_type }} cmake -E tar cf ${{ github.workspace }}/IPT-Vamp-Windows.zip --format=zip ircamipt.vamp
+    - name: Artifact
       uses: actions/upload-artifact@v7.0.2
       with:
-        name: IPT-CommonPackage-Windows
-        path: ${{ github.workspace }}/build/${{ env.build_type }}/ircamipt.vamp
+        name: IPT-Vamp-Windows
+        path: ${{ github.workspace }}/IPT-Vamp-Windows.zip
     - name: Artifact
       uses: actions/upload-artifact@v7.0.2
       with:
@@ -160,7 +166,9 @@ jobs:
         fail_on_unmatched_files: true
         generate_release_notes: true
         body_path: ${{ github.workspace }}/build/ipt-release.md
-        files: ${{ github.workspace }}/package/IPT-Windows.exe
+        files: |
+          ${{ github.workspace }}/package/IPT-Windows.exe
+          ${{ github.workspace }}/IPT-Vamp-Windows.zip
   # Compiles, tests and packages the plugin for MacOS.
   MacOS:
     runs-on: macos-latest
@@ -211,11 +219,13 @@ jobs:
         cmake --build ${{ github.workspace }}/build
     - name: Test
       run: ctest -C ${{ env.build_type }} -VV --test-dir ${{ github.workspace }}/build
-    - name: CommonPackage Artifact
+    - name: Package
+      run: cmake -E chdir ${{ github.workspace }}/build/${{ env.build_type }} cmake -E tar cf ${{ github.workspace }}/IPT-Vamp-MacOS.zip --format=zip ircamipt.vamp
+    - name: Artifact
       uses: actions/upload-artifact@v7.0.2
       with:
-        name: IPT-CommonPackage-MacOS
-        path: ${{ github.workspace }}/build/${{ env.build_type }}/ircamipt.vamp
+        name: IPT-Vamp-MacOS
+        path: ${{ github.workspace }}/IPT-Vamp-MacOS.zip
     - name: Artifact
       uses: actions/upload-artifact@v7.0.2
       with:
@@ -230,40 +240,6 @@ jobs:
         fail_on_unmatched_files: true
         generate_release_notes: true
         body_path: ${{ github.workspace }}/build/ipt-release.md
-        files: ${{ github.workspace }}/package/IPT-MacOS.pkg
-  # Packages the vamp plugins of the three operating systems for a common distribution package.
-  CommonPackage:
-    runs-on: ubuntu-latest
-    needs: [Ubuntu, Windows, MacOS]
-    steps:
-    - name: Download Linux
-      uses: actions/download-artifact@v6
-      with:
-        name: IPT-CommonPackage-Linux
-        path: ${{ github.workspace }}/dist/Linux/ircamipt.vamp
-    - name: Download MacOS
-      uses: actions/download-artifact@v6
-      with:
-        name: IPT-CommonPackage-MacOS
-        path: ${{ github.workspace }}/dist/MacOS/ircamipt.vamp
-    - name: Download Windows
-      uses: actions/download-artifact@v6
-      with:
-        name: IPT-CommonPackage-Windows
-        path: ${{ github.workspace }}/dist/Windows/ircamipt.vamp
-    - name: Package
-      run: cd ${{ github.workspace }}/dist && zip -r ../IPT-CommonPackage.zip Linux MacOS Windows
-    - name: Artifact
-      uses: actions/upload-artifact@v7.0.2
-      with:
-        name: IPT-CommonPackage
-        path: ${{ github.workspace }}/dist
-    - name: Release
-      uses: softprops/action-gh-release@v3
-      if: ${{ env.is_tagged == 'true' }}
-      with:
-        draft: true
-        prerelease: true
-        fail_on_unmatched_files: true
-        generate_release_notes: true
-        files: ${{ github.workspace }}/IPT-CommonPackage.zip
+        files: |
+          ${{ github.workspace }}/package/IPT-MacOS.pkg
+          ${{ github.workspace }}/IPT-Vamp-MacOS.zip
