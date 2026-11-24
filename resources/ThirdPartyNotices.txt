@@ -1,0 +1,93 @@
+IPT Vamp Plugin - Third-party notices
+=====================================
+
+The IPT Vamp Plugin is distributed under the MIT License (see
+IPT-Vamp-Plugin.txt). It includes the following third-party software and
+models, which remain under their own licenses. The full texts of the licenses
+are in this folder.
+
+Software
+--------
+
+- LibTorch 2.4.1, the C++ library of PyTorch (https://github.com/pytorch/pytorch)
+  Copyright (c) 2016- Facebook, Inc (Adam Paszke) and the other copyright
+  holders listed in libtorch.txt
+  License: BSD 3-Clause License (libtorch.txt and libtorch-NOTICE.txt)
+  PyTorch bundles third-party libraries that remain under their own licenses
+  (such as oneDNN, FBGEMM, pthreadpool, cpuinfo, sleef, fmt, protobuf, ONNX and
+  miniz): they are listed and their licenses are concatenated in libtorch.txt.
+  The libraries embedded in the plugin bundle are libtorch, libtorch_cpu and
+  libc10 on macOS and Linux, and torch_cpu, c10 and fbgemm on Windows.
+
+- AsmJit (https://github.com/asmjit/asmjit), included in LibTorch on Windows
+  Copyright (c) 2008-2020 The AsmJit Authors
+  License: zlib License (asmjit.txt)
+
+- GNU Offloading and Multi Processing Runtime Library (libgomp)
+  (https://gcc.gnu.org/onlinedocs/libgomp/), included in LibTorch on Linux
+  Copyright (C) Free Software Foundation, Inc.
+  License: GNU General Public License version 3 (libgomp-COPYING3.txt) with
+  the GCC Runtime Library Exception version 3.1 (libgomp-COPYING.RUNTIME.txt)
+
+- Intel oneAPI Math Kernel Library 2023.1.0 (https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html),
+  used by LibTorch on Windows (Anaconda package mkl-2023.1.0)
+  License: Intel Simplified Software License, version October 2022 (intel-mkl.txt)
+
+- Intel OpenMP Runtime Library 2023.1.0, used by LibTorch on Windows
+  (Anaconda package intel-openmp-2023.1.0)
+  License: Intel Simplified Software License, version October 2022 (intel-openmp.txt)
+
+- libuv 1.48.0 (https://github.com/libuv/libuv), used by LibTorch on Windows
+  (Anaconda package libuv-1.48.0)
+  Copyright (c) 2015-present libuv project contributors
+  License: MIT License (libuv.txt)
+
+- Vamp Plugin SDK (https://github.com/vamp-plugins/vamp-plugin-sdk)
+  Copyright (c) 2005-2006 Chris Cannam
+  Copyright (c) 2006-2024 Queen Mary, University of London
+  License: MIT-style license (vamp-plugin-sdk.txt)
+  The Vamp Plugin SDK contains KissFFT, Copyright (c) 2003-2010 Mark Borgerding,
+  BSD 3-Clause license (vamp-plugin-sdk.txt)
+
+- Ircam Vamp Extension (https://github.com/Ircam-Partiels/ircam-vamp-extension)
+  Copyright (c) 2024 Pierre Guillot, IRCAM
+  License: MIT License (ircam-vamp-extension.txt)
+
+- JUCE (https://github.com/juce-framework/JUCE)
+  The resampler of the plugin is adapted from the Lagrange interpolator
+  (juce_LagrangeInterpolator.cpp and juce_GenericInterpolator.h) of the
+  juce_audio_basics module of JUCE 7, distributed under the ISC license:
+
+    Copyright (c) 2022 - Raw Material Software Limited
+
+    The code included in this file is provided under the terms of the ISC license
+    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+    To use, copy, modify, and/or distribute this software for any purpose with or
+    without fee is hereby granted provided that the above copyright notice and
+    this permission notice appear in all copies.
+
+    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
+    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
+    DISCLAIMED.
+
+Models
+------
+
+The models embedded in the Resources/models folder of the plugin bundle are the
+IPT models by Nicolas Brochec, Joakim Borg and Marco Fiorini at IRCAM
+(http://repmus.ircam.fr/ipt/home), trained and exported to TorchScript with
+ipt_recognition (https://github.com/nbrochec/ipt_recognition). They are
+distributed under the license of the libipt project
+(https://github.com/nbrochec/libipt), the Creative Commons
+Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0,
+ipt-models.txt, https://creativecommons.org/licenses/by-nc/4.0/): commercial
+use of the models is not permitted. The files are renamed but not modified.
+
+- 00_eguitar.ts (eguitar_ircam.ts, electric guitar)
+  https://huggingface.co/nbrochec/ipt_models/blob/main/eguitar_ircam.ts
+- 01_flute.ts (flute_ircam.ts, flute)
+  https://huggingface.co/nbrochec/ipt_models/blob/main/flute_ircam.ts
+- 02_trumpet.ts (trumpet_ircam.ts, trumpet)
+  https://huggingface.co/nbrochec/ipt_models/blob/main/trumpet_ircam.ts
+- 03_trumpet_harmon.ts (trumpet_harmon_ircam.ts, trumpet with harmon mute)
+  https://huggingface.co/nbrochec/ipt_models/blob/main/trumpet_harmon_ircam.ts

@@ -97,7 +97,7 @@ endif()
 vpp_add_plugin(ipt_vamp_plugin
   OUTPUT_NAME ircamipt
   CATFILE ${CMAKE_CURRENT_SOURCE_DIR}/source/ircamipt.cat
-  COPYRIGHT "Copyright 2026 Ircam. All rights reserved"
+  COPYRIGHT "Copyright 2026 Ircam. MIT License"
   VERSION ${PROJECT_VERSION_MAJOR}
   INSTALL ON
   DEBUG ${IPT_VAMP_PLUGIN_ENABLE_DEBUG}
@@ -122,6 +122,24 @@ add_custom_command(TARGET ipt_vamp_plugin POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
     "${CMAKE_CURRENT_BINARY_DIR}/models/"
     "$<TARGET_FILE_DIR:ipt_vamp_plugin>/../Resources/models"
+)
+
+### Licenses ###
+# The licenses of the plugin, of the third-party libraries and of the models are
+# copied into the Resources/licenses folder of the Vamp bundle (hence they are
+# distributed with the bundle and the installers). The ThirdPartyNotices.txt file
+# lists the components and refers to the license files. The licenses of LibTorch
+# and of its runtime libraries are copied by setup_libtorch (see
+# resources/libtorch.cmake). The license of the models (CC BY-NC 4.0) is a copy
+# of the license of the libipt project (see resources/licenses/libipt.txt).
+set(IPT_VAMP_PLUGIN_LICENSES_DIR "$<TARGET_FILE_DIR:ipt_vamp_plugin>/../Resources/licenses")
+add_custom_command(TARGET ipt_vamp_plugin POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${IPT_VAMP_PLUGIN_LICENSES_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/resources/ThirdPartyNotices.txt" "${IPT_VAMP_PLUGIN_LICENSES_DIR}/ThirdPartyNotices.txt"
+  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" "${IPT_VAMP_PLUGIN_LICENSES_DIR}/IPT-Vamp-Plugin.txt"
+  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/resources/licenses/libipt.txt" "${IPT_VAMP_PLUGIN_LICENSES_DIR}/ipt-models.txt"
+  COMMAND ${CMAKE_COMMAND} -E copy "${VAMP_SDK_PATH}/COPYING" "${IPT_VAMP_PLUGIN_LICENSES_DIR}/vamp-plugin-sdk.txt"
+  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/ircam-vamp-extension/LICENSE" "${IPT_VAMP_PLUGIN_LICENSES_DIR}/ircam-vamp-extension.txt"
 )
 
 ### Publishing ###
