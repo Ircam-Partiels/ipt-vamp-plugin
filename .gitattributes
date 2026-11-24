@@ -1,0 +1,3 @@
+# Keeps LF line endings on all platforms so the hash of the CMake scripts (used
+# in the keys of the CI caches) is the same on Windows, Linux and macOS.
+*.cmake text eol=lf
