@@ -40,7 +40,7 @@ jobs:
       uses: actions/cache@v6
       with:
         path: ./build/models
-        key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.json') }}
+        key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.key') }}
         enableCrossOsArchive: true
     - name: Download
       env:
@@ -62,7 +62,7 @@ jobs:
       uses: actions/cache@v6
       with:
         path: ./build/models
-        key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.json') }}
+        key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.key') }}
         enableCrossOsArchive: true
     - name: Cache
       uses: actions/cache@v6
@@ -74,6 +74,8 @@ jobs:
     - name: Sccache
       uses: mozilla-actions/sccache-action@v0.0.11
     - name: Configure
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: cmake -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DCMAKE_C_COMPILER="/usr/bin/clang" -DCMAKE_CXX_COMPILER="/usr/bin/clang++" -DIPT_VAMP_PLUGIN_BUILD_TAG=${{ env.tag_name }} -DIPT_VAMP_PLUGIN_ENABLE_DEBUG=OFF -DIPT_VAMP_PLUGIN_USE_SCCACHE=ON
     - name: Build
       run: cmake --build ${{ github.workspace }}/build
@@ -120,7 +122,7 @@ jobs:
       uses: actions/cache@v6
       with:
         path: ./build/models
-        key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.json') }}
+        key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.key') }}
         enableCrossOsArchive: true
     - name: Cache
       uses: actions/cache@v6
@@ -140,6 +142,8 @@ jobs:
     - name: Sccache
       uses: mozilla-actions/sccache-action@v0.0.11
     - name: Configure
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: cmake -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DIPT_VAMP_PLUGIN_BUILD_TAG="${{ env.tag_name }}" -DIPT_VAMP_PLUGIN_ENABLE_DEBUG=OFF -DIPT_VAMP_PLUGIN_USE_SCCACHE=ON
     - name: Build
       run: cmake --build ${{ github.workspace }}/build
@@ -186,7 +190,7 @@ jobs:
       uses: actions/cache@v6
       with:
         path: ./build/models
-        key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.json') }}
+        key: models-${{ hashFiles('resources/download_model.cmake', 'build/ipt_release_assets.key') }}
         enableCrossOsArchive: true
     - name: Cache
       uses: actions/cache@v6
@@ -211,6 +215,8 @@ jobs:
     - name: Sccache
       uses: mozilla-actions/sccache-action@v0.0.11
     - name: Configure
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: cmake -B ${{ github.workspace }}/build -G Ninja -DVPP_CODESIGN_APPLE_KEYCHAIN_PROFILE_INSTALLER="notary-installer" -DVPP_NOTARIZE=ON -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DIPT_VAMP_PLUGIN_BUILD_TAG=${{ env.tag_name }} -DIPT_VAMP_PLUGIN_ENABLE_DEBUG=OFF -DIPT_VAMP_PLUGIN_USE_SCCACHE=ON
     - name: Build
       run: |
