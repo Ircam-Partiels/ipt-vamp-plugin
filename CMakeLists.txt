@@ -47,7 +47,16 @@ add_subdirectory(ircam-vamp-extension EXCLUDE_FROM_ALL)
 include(resources/libtorch.cmake)
 
 ### Models
-execute_process(COMMAND ${CMAKE_COMMAND} -DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/resources/download_model.cmake)
+execute_process(COMMAND ${CMAKE_COMMAND} -DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/resources/download_model.cmake RESULT_VARIABLE IPT_VAMP_PLUGIN_DOWNLOAD_MODEL_RESULT)
+if(NOT IPT_VAMP_PLUGIN_DOWNLOAD_MODEL_RESULT EQUAL 0)
+  # The plugin cannot be initialized without the models, so the configuration
+  # only continues if models have already been downloaded (offline builds).
+  file(GLOB IPT_VAMP_PLUGIN_MODELS ${CMAKE_CURRENT_BINARY_DIR}/models/*.ts)
+  if(NOT IPT_VAMP_PLUGIN_MODELS)
+    message(FATAL_ERROR "Failed to download the models of the IPT plugin")
+  endif()
+  message(WARNING "Failed to update the models of the IPT plugin, using the existing models")
+endif()
 
 ### Version ###
 execute_process(COMMAND git log -1 --format=%h WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} OUTPUT_VARIABLE GIT_COMMIT_ID OUTPUT_STRIP_TRAILING_WHITESPACE)
