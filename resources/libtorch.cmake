@@ -12,11 +12,24 @@ set(LIBTORCH_PYTHON_VERSION "3.12" CACHE STRING "Python version for LibTorch")
 set(LIBTORCH_DIR "${CMAKE_CURRENT_BINARY_DIR}/libtorch" CACHE PATH "The directory where LibTorch is downloaded")
 option(LIBTORCH_USE_CXX11_ABI "Download the cxx11-abi version of LibTorch on Linux" ON)
 
+# The directory of the copies of the licenses of LibTorch and of its runtime
+# libraries that are not provided by the downloaded archives (the Linux archive
+# of LibTorch contains no license file and the Anaconda packages only contain the
+# main license of PyTorch, without the licenses of the bundled libraries).
+set(LIBTORCH_LICENSES_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/licenses")
+
 include(FetchContent)
 
 # Downloads LibTorch, links the target with the LibTorch libraries and embeds
-# the libraries into the Contents directory of the Vamp bundle of the target.
+# the libraries and their licenses into the Contents directory of the Vamp
+# bundle of the target (the licenses are copied into the Resources/licenses
+# folder).
 function(setup_libtorch target)
+  if(NOT LIBTORCH_VERSION VERSION_EQUAL "2.4.1")
+    message(WARNING "The license files of ${LIBTORCH_LICENSES_SOURCE_DIR} correspond to LibTorch 2.4.1, they must be updated for LibTorch ${LIBTORCH_VERSION}")
+  endif()
+  set(LIBTORCH_LICENSES_DIR "$<TARGET_FILE_DIR:${target}>/../Resources/licenses")
+
   ### Download LibTorch ###
   if(APPLE)
     set(LIBTORCH_URL "https://anaconda.org/pytorch/pytorch/${LIBTORCH_VERSION}/download/osx-arm64/pytorch-${LIBTORCH_VERSION}-py${LIBTORCH_PYTHON_VERSION}_0.tar.bz2")
@@ -90,6 +103,15 @@ function(setup_libtorch target)
         ${TORCH_GOMP_LIBS}
         "$<TARGET_FILE_DIR:${target}>/libs"
     )
+    # The libgomp library of GCC is under the GPLv3 with the GCC Runtime Library
+    # Exception.
+    if(TORCH_GOMP_LIBS)
+      add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${LIBTORCH_LICENSES_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy "${LIBTORCH_LICENSES_SOURCE_DIR}/libgomp-COPYING3.txt" "${LIBTORCH_LICENSES_DIR}/libgomp-COPYING3.txt"
+        COMMAND ${CMAKE_COMMAND} -E copy "${LIBTORCH_LICENSES_SOURCE_DIR}/libgomp-COPYING.RUNTIME.txt" "${LIBTORCH_LICENSES_DIR}/libgomp-COPYING.RUNTIME.txt"
+      )
+    endif()
   elseif(WIN32)
     set(MKL_URL "https://repo.anaconda.com/pkgs/main/win-64/mkl-2023.1.0-h6b88ed4_46358.tar.bz2")
     set(MKL_DIR "${CMAKE_CURRENT_BINARY_DIR}/mkl")
@@ -125,7 +147,27 @@ function(setup_libtorch target)
         ${PYTORCH_DLLS}
         "$<TARGET_FILE_DIR:${target}>"
     )
+
+    # The licenses of MKL, Intel OpenMP and libuv are provided by the Anaconda
+    # packages (in the pkg archive for Intel OpenMP). The license of AsmJit (the
+    # asmjit library is part of the LibTorch package) is a copy.
+    add_custom_command(TARGET ${target} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E make_directory "${LIBTORCH_LICENSES_DIR}"
+      COMMAND ${CMAKE_COMMAND} -E copy "${MKL_DIR}/info/licenses/mkl/info/licenses/license.txt" "${LIBTORCH_LICENSES_DIR}/intel-mkl.txt"
+      COMMAND ${CMAKE_COMMAND} -E copy "${INTEL_OPENMP_DIR}/info/licenses/mkl/info/licenses/license.txt" "${LIBTORCH_LICENSES_DIR}/intel-openmp.txt"
+      COMMAND ${CMAKE_COMMAND} -E copy "${UV_DIR}/info/licenses/LICENSE" "${LIBTORCH_LICENSES_DIR}/libuv.txt"
+      COMMAND ${CMAKE_COMMAND} -E copy "${LIBTORCH_LICENSES_SOURCE_DIR}/asmjit.txt" "${LIBTORCH_LICENSES_DIR}/asmjit.txt"
+    )
   endif()
+
+  ### Embed the licenses of LibTorch into the Vamp bundle of the target ###
+  # The license of the PyTorch binary distribution contains the licenses of the
+  # third-party libraries bundled with PyTorch.
+  add_custom_command(TARGET ${target} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${LIBTORCH_LICENSES_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy "${LIBTORCH_LICENSES_SOURCE_DIR}/libtorch.txt" "${LIBTORCH_LICENSES_DIR}/libtorch.txt"
+    COMMAND ${CMAKE_COMMAND} -E copy "${LIBTORCH_LICENSES_SOURCE_DIR}/libtorch-NOTICE.txt" "${LIBTORCH_LICENSES_DIR}/libtorch-NOTICE.txt"
+  )
 endfunction()
 
 # Downloads and extracts an archive into the output directory if it does not

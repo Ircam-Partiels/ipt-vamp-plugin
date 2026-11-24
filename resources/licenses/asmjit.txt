@@ -1,0 +1,24 @@
+This file is a copy of the LICENSE.md file of AsmJit, retrieved from
+https://github.com/asmjit/asmjit/blob/d3fbf7c9bc7c1d1365a94a45614b91c5a3706b81/LICENSE.md
+(the AsmJit version used by FBGEMM dbc3157bf256f1339b3fa1fef2be89ac4078be0e, the
+FBGEMM version of PyTorch 2.4.1). It applies to the asmjit.dll library embedded
+in the plugin bundle on Windows (see ThirdPartyNotices.txt).
+================================================================================
+
+Copyright (c) 2008-2020 The AsmJit Authors
+
+This software is provided 'as-is', without any express or implied
+warranty. In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
